@@ -1,0 +1,135 @@
+import React, { useState, useEffect } from 'react'
+import TOTPForm from './TOTPForm'
+import TOTPDisplay from './TOTPDisplay'
+import { TOTPConfig } from '../../types/TOTPTypes'
+import { generateTOTP, testTOTPGeneration } from '../../utils/totpUtils'
+import './TOTPGenerator.css'
+
+const TOTPGenerator: React.FC = () => {
+  const [config, setConfig] = useState<TOTPConfig>({
+    secret: '',
+    digits: 6,
+    period: 30,
+    algorithm: 'sha1'
+  })
+  
+  const [currentTOTP, setCurrentTOTP] = useState<string>('')
+  const [timeRemaining, setTimeRemaining] = useState<number>(30)
+  const [isValid, setIsValid] = useState<boolean>(false)
+
+  useEffect(() => {
+    if (!config.secret || config.secret.trim() === '') {
+      setIsValid(false)
+      setCurrentTOTP('')
+      return
+    }
+
+    try {
+      const totp = generateTOTP(config)
+      console.log('Generated TOTP:', totp, 'for config:', config) // Debug log
+      setCurrentTOTP(totp)
+      setIsValid(true)
+    } catch (error) {
+      console.error('TOTP generation error:', error) // Debug log
+      setIsValid(false)
+      setCurrentTOTP('')
+    }
+  }, [config])
+
+  useEffect(() => {
+    if (!isValid) return
+
+    const timer = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev <= 1) {
+          // Regenerate TOTP when timer resets
+          try {
+            const totp = generateTOTP(config)
+            console.log('Timer reset - New TOTP:', totp) // Debug log
+            setCurrentTOTP(totp)
+            return config.period
+          } catch (error) {
+            console.error('Timer reset TOTP error:', error) // Debug log
+            setIsValid(false)
+            return config.period
+          }
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [isValid, config.period, config])
+
+  const handleConfigChange = (newConfig: TOTPConfig) => {
+    setConfig(newConfig)
+    setTimeRemaining(newConfig.period)
+  }
+
+  const handleTestTOTP = () => {
+    try {
+      const testTOTP = testTOTPGeneration()
+      console.log('Test TOTP result:', testTOTP)
+      // Set a test config to see if it works
+      const testConfig = {
+        secret: 'JBSWY3DPEHPK3PXP',
+        digits: 6,
+        period: 30,
+        algorithm: 'sha1' as const
+      }
+      setConfig(testConfig)
+      setTimeRemaining(30)
+    } catch (error) {
+      console.error('Test failed:', error)
+    }
+  }
+
+  return (
+    <div className="totp-generator">
+      {/* Debug info - remove this later */}
+      <div style={{ 
+        background: '#f0f0f0', 
+        padding: '10px', 
+        margin: '10px 0', 
+        borderRadius: '8px',
+        fontSize: '12px',
+        fontFamily: 'monospace'
+      }}>
+        <strong>Debug Info:</strong><br/>
+        Secret: {config.secret ? `${config.secret.substring(0, 8)}...` : 'empty'}<br/>
+        IsValid: {isValid.toString()}<br/>
+        CurrentTOTP: {currentTOTP || 'empty'}<br/>
+        TimeRemaining: {timeRemaining}s<br/>
+        <button 
+          onClick={handleTestTOTP}
+          style={{
+            marginTop: '10px',
+            padding: '5px 10px',
+            background: '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          Test TOTP Generation
+        </button>
+      </div>
+      
+      <div className="generator-container">
+        <TOTPForm 
+          config={config} 
+          onConfigChange={handleConfigChange}
+        />
+        <TOTPDisplay 
+          totp={currentTOTP}
+          timeRemaining={timeRemaining}
+          period={config.period}
+          isValid={isValid}
+        />
+      </div>
+    </div>
+  )
+}
+
+export default TOTPGenerator 
