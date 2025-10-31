@@ -1,4 +1,4 @@
-name: Deploy Jekyll site (no artifacts)
+name: Deploy Vite + React to GitHub Pages (no artifacts)
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write   # needed to push to gh-pages branch
+  contents: write  # to push to gh-pages branch
 
 jobs:
   build-and-deploy:
@@ -16,21 +16,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          ruby-version: '3.1'
-          bundler-cache: true
+          node-version: 22
 
       - name: Install dependencies
-        run: bundle install
+        run: npm ci
 
-      - name: Build Jekyll site
-        run: bundle exec jekyll build -d ./_site
+      - name: Build project
+        run: npm run build
 
       - name: Deploy to GitHub Pages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           npm install -g gh-pages
-          gh-pages -d _site -t true -r https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
+          gh-pages -d dist -t true -r https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
