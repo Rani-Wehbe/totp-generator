@@ -31,5 +31,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          npm install -g gh-pages
+          npm install gh-pages
+          npm run deploy
           gh-pages -d dist -t true -r https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
