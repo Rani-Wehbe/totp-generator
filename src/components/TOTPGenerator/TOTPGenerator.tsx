@@ -86,36 +86,6 @@ const TOTPGenerator: React.FC = () => {
 
   return (
     <div className="totp-generator">
-      {/* Debug info - remove this later */}
-      <div style={{ 
-        background: '#f0f0f0', 
-        padding: '10px', 
-        margin: '10px 0', 
-        borderRadius: '8px',
-        fontSize: '12px',
-        fontFamily: 'monospace'
-      }}>
-        <strong>Debug Info:</strong><br/>
-        Secret: {config.secret ? `${config.secret.substring(0, 8)}...` : 'empty'}<br/>
-        IsValid: {isValid.toString()}<br/>
-        CurrentTOTP: {currentTOTP || 'empty'}<br/>
-        TimeRemaining: {timeRemaining}s<br/>
-        <button 
-          onClick={handleTestTOTP}
-          style={{
-            marginTop: '10px',
-            padding: '5px 10px',
-            background: '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
-          Test TOTP Generation
-        </button>
-      </div>
-      
       <div className="generator-container">
         <TOTPForm 
           config={config} 
